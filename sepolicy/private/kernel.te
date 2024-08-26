@@ -1,0 +1,1 @@
+allow kernel gsi_data_file:file { open read write };

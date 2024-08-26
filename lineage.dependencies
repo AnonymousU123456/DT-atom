@@ -1,0 +1,14 @@
+[
+ {
+   "repository"  : "LineageOS/android_device_mediatek_sepolicy_vndr",
+   "target_path" : "device/mediatek/sepolicy_vndr",
+   "remote"      : "github",
+   "branch"      : "lineage-21"
+ },
+ {
+   "repository"  : "MiCode/Xiaomi_Kernel_OpenSource",
+   "target_path" : "kernel/xiaomi/atom",
+   "remote"      : "github",
+   "branch"      : "pissarro-s-oss"
+ }
+]

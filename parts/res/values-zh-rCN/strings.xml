@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2020 The LineageOS Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <!-- Ambient settings -->
+    <string name="ambient_enable">使用环境显示</string>
+
+    <!-- Device specific settings -->
+    <string name="device_settings_app_name">设备设置</string>
+
+    <!-- DO NOT TRANSLATE Empty summary for dynamic preferences -->
+    <string name="summary_empty" translatable="false"></string>
+
+    <!--Display settings fragment -->
+    <string name="display_settings_title">自定义显示设置</string>
+    <string name="display_settings_summary">DC调光、HBM高亮度模式</string>
+
+    <!-- HBM settings -->
+    <string name="hbm_mode_title">高亮度模式</string>
+    <string name="hbm_mode_summary">高亮度模式允许显示亮度高于最大值。 这有助于提高在阳光直射下的能见度。</string>
+    <string name="hbm_enable_summary_not_supported">当前内核不支持HBM高亮度模式。</string>
+
+    <!-- DC settings -->
+    <string name="dc_dimming_mode_title">防闪烁模式</string>
+    <string name="dc_dimming_mode_summary">开启低亮度DC调光功能以阻止闪烁，部分屏幕显示功能会受到影响。</string>
+    <string name="dc_dimming_mode_not_supported">当前系统不支持防闪烁模式。</string>
+
+    <!-- Clear Speaker -->
+    <string name="clear_speaker_title">清理扬声器</string>
+    <string name="clear_speaker_summary">播放一段约 30 秒的音频来清理扬声器</string>
+    <string name="clear_speaker_description">当扬声器被少量灰尘覆盖时，将音量调至最大运行 1-2 次。\n\n当扬声器充满灰尘时将扬声器朝下轻轻摇晃您的设备，运行 2-5 次。</string>
+</resources>

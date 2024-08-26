@@ -1,0 +1,5 @@
+service logcollector /system/bin/sh /system/etc/log_collector.sh
+    class main
+    user root
+    group shell log readproc
+    oneshot

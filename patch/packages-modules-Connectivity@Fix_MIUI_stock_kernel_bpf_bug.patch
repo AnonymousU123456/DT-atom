@@ -1,0 +1,61 @@
+From b8733fd14308f9085be042a0ae8e06f17e8af63d Mon Sep 17 00:00:00 2001
+From: xjl12 <xiao-xjle@qq.com>
+Date: Mon, 5 Aug 2024 14:46:07 +0800
+Subject: [PATCH] Fix MIUI stock kernel bpf bug
+
+Change-Id: Ib4da630d282537a60ce802e8d18aac10dd9f186d
+---
+ netbpfload/loader.cpp                                       | 6 +++---
+ .../jni/com_android_server_connectivity_ClatCoordinator.cpp | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/netbpfload/loader.cpp b/netbpfload/loader.cpp
+index d9d3b5067c..c67dff3035 100644
+--- a/netbpfload/loader.cpp
++++ b/netbpfload/loader.cpp
+@@ -784,7 +784,7 @@ static int createMaps(const char* elfPath, ifstream& elfFile, vector<unique_fd>&
+               .max_entries = max_entries,
+               .map_flags = md[i].map_flags,
+             };
+-            if (isAtLeastKernelVersion(4, 14, 0))
++            if (isAtLeastKernelVersion(4, 15, 0))
+                 strlcpy(req.map_name, mapNames[i].c_str(), sizeof(req.map_name));
+             fd.reset(bpf(BPF_MAP_CREATE, req));
+             saved_errno = errno;
+@@ -1025,9 +1025,9 @@ static int loadCodeSections(const char* elfPath, vector<codeSection>& cs, const
+               .log_level = 1,
+               .log_buf = ptr_to_u64(log_buf.data()),
+               .log_size = static_cast<__u32>(log_buf.size()),
+-              .expected_attach_type = cs[i].expected_attach_type,
++            //   .expected_attach_type = cs[i].expected_attach_type,
+             };
+-            if (isAtLeastKernelVersion(4, 14, 0))
++            if (isAtLeastKernelVersion(4, 15, 0))
+                 strlcpy(req.prog_name, cs[i].name.c_str(), sizeof(req.prog_name));
+             fd.reset(bpf(BPF_PROG_LOAD, req));
+ 
+diff --git a/service/jni/com_android_server_connectivity_ClatCoordinator.cpp b/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
+index c125bd6479..adef6f3eca 100644
+--- a/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
++++ b/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
+@@ -96,7 +96,7 @@ static const char* kClatdBin = "/apex/com.android.tethering/bin/for-system/clatd
+ #define V(path, md, uid, gid, ctx, vtype) \
+     verifyPerms((path), (md), AID_ ## uid, AID_ ## gid, "u:object_r:" ctx ":s0", VERIFY_ ## vtype)
+ 
+-static void verifyClatPerms() {
++static void __attribute__((unused)) verifyClatPerms() {
+     // We might run as part of tests instead of as part of system server
+     if (getuid() != AID_SYSTEM) return;
+ 
+@@ -560,7 +560,7 @@ static const JNINativeMethod gMethods[] = {
+ };
+ 
+ int register_com_android_server_connectivity_ClatCoordinator(JNIEnv* env) {
+-    verifyClatPerms();
++    // verifyClatPerms();
+     return jniRegisterNativeMethods(env,
+             "android/net/connectivity/com/android/server/connectivity/ClatCoordinator",
+             gMethods, NELEM(gMethods));
+-- 
+2.45.2
+

@@ -1,0 +1,365 @@
+From 95527204e0f462ad7b59062e4d0c3c385503fd56 Mon Sep 17 00:00:00 2001
+From: xjl12 <xiao-xjle@qq.com>
+Date: Fri, 9 Aug 2024 10:19:09 +0800
+Subject: [PATCH] [PATCH 1/2] UDFPS better user experience by xjl12
+
+Change-Id: I5bd4929517d904ac04b202a4550cd342b941d602
+---
+ .../SystemUI/res/drawable/fingerprint_bg.xml  |  2 +-
+ .../com/android/keyguard/LockIconView.java    |  2 +-
+ .../systemui/biometrics/UdfpsController.java  |  5 +--
+ .../android/systemui/biometrics/UdfpsView.kt  | 13 ++++++
+ .../biometrics/sensors/SensorOverlays.java    | 45 +++++++++++++++++++
+ .../hidl/FingerprintAuthenticationClient.java | 12 ++---
+ .../hidl/FingerprintDetectClient.java         |  6 +--
+ .../hidl/FingerprintEnrollClient.java         | 10 ++---
+ .../sensors/fingerprint/hidl/TestHal.java     |  8 +++-
+ 9 files changed, 83 insertions(+), 20 deletions(-)
+
+diff --git a/packages/SystemUI/res/drawable/fingerprint_bg.xml b/packages/SystemUI/res/drawable/fingerprint_bg.xml
+index 558ec08b2ceb..440eb04d02aa 100644
+--- a/packages/SystemUI/res/drawable/fingerprint_bg.xml
++++ b/packages/SystemUI/res/drawable/fingerprint_bg.xml
+@@ -18,7 +18,7 @@
+     android:shape="oval">
+ 
+     <solid
+-      android:color="?androidprv:attr/colorSurface"/>
++      android:color="@color/system_bar_background_transparent"/>
+ 
+     <size
+         android:width="64dp"
+diff --git a/packages/SystemUI/src/com/android/keyguard/LockIconView.java b/packages/SystemUI/src/com/android/keyguard/LockIconView.java
+index ff6a3d0cc6f0..59dcb57bed02 100644
+--- a/packages/SystemUI/src/com/android/keyguard/LockIconView.java
++++ b/packages/SystemUI/src/com/android/keyguard/LockIconView.java
+@@ -108,7 +108,7 @@ public class LockIconView extends FrameLayout implements Dumpable {
+      * Whether or not to render the lock icon background. Mainly used for UDPFS.
+      */
+     public void setUseBackground(boolean useBackground) {
+-        mUseBackground = useBackground;
++        mUseBackground = false;
+         updateColorAndBackgroundVisibility();
+     }
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+index 48ecbe29e8a6..eaa664f48d61 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+@@ -829,6 +829,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+             mOnFingerDown = false;
+             mAttemptedToDismissKeyguard = false;
+             mOrientationListener.enable();
++            updateViewDimAmount();
+             if (mFingerprintManager != null) {
+                 mFingerprintManager.onUdfpsUiEvent(FingerprintManager.UDFPS_UI_OVERLAY_SHOWN,
+                         overlay.getRequestId(), mSensorProps.sensorId);
+@@ -1026,7 +1027,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+     private void updateViewDimAmount() {
+         if (mOverlay == null || !mUseFrameworkDimming) {
+             return;
+-        } else if (isFingerDown()) {
++        } else {
+             int curBrightness = getBrightness();
+             int i, dimAmount;
+             for (i = 0; i < mBrightnessAlphaArray.length; i++) {
+@@ -1042,8 +1043,6 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+                         mBrightnessAlphaArray[i][1], mBrightnessAlphaArray[i-1][1]);
+             }
+             mOverlay.setDimAmount(dimAmount / 255.0f);
+-        } else {
+-            mOverlay.setDimAmount(0.0f);
+         }
+     }
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.kt b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.kt
+index a8e4e95114ca..32951a9cb11a 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.kt
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.kt
+@@ -25,12 +25,17 @@ import android.util.AttributeSet
+ import android.util.Log
+ import android.view.MotionEvent
+ import android.view.Surface
++import android.provider.Settings
++import android.view.View
+ import android.widget.FrameLayout
+ import com.android.systemui.biometrics.shared.model.UdfpsOverlayParams
+ import com.android.systemui.doze.DozeReceiver
+ import com.android.systemui.res.R
+ 
+ private const val TAG = "UdfpsView"
++private const val HBM_SWITCH = "udfps_need_hbm"
++private const val UDFPS_SWITCH = "udfps_view_state"
++
+ 
+ /**
+  * The main view group containing all UDFPS animations.
+@@ -95,11 +100,19 @@ class UdfpsView(
+     override fun onAttachedToWindow() {
+         super.onAttachedToWindow()
+         Log.v(TAG, "onAttachedToWindow")
++        Settings.System.putInt(context.contentResolver,UDFPS_SWITCH,1)
++    }
++
++    override fun onWindowVisibilityChanged(visibility: Int) {
++        super.onWindowVisibilityChanged(visibility)
++        Log.v(TAG, "onWindowVisibilityChanged:"+visibility)
++        Settings.System.putInt(context.contentResolver,HBM_SWITCH,if (visibility==View.VISIBLE) 1 else 0)
+     }
+ 
+     override fun onDetachedFromWindow() {
+         super.onDetachedFromWindow()
+         Log.v(TAG, "onDetachedFromWindow")
++        Settings.System.putInt(context.contentResolver,UDFPS_SWITCH,0)
+     }
+ 
+     override fun onDraw(canvas: Canvas) {
+diff --git a/services/core/java/com/android/server/biometrics/sensors/SensorOverlays.java b/services/core/java/com/android/server/biometrics/sensors/SensorOverlays.java
+index 3d20efc88c77..b12502b5457c 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/SensorOverlays.java
++++ b/services/core/java/com/android/server/biometrics/sensors/SensorOverlays.java
+@@ -21,6 +21,7 @@ import static com.android.systemui.shared.Flags.sidefpsControllerRefactor;
+ import android.annotation.NonNull;
+ import android.annotation.Nullable;
+ import android.hardware.biometrics.BiometricRequestConstants;
++import android.hardware.biometrics.fingerprint.V2_1.IBiometricsFingerprint;
+ import android.hardware.fingerprint.ISidefpsController;
+ import android.hardware.fingerprint.IUdfpsOverlayController;
+ import android.hardware.fingerprint.IUdfpsOverlayControllerCallback;
+@@ -81,6 +82,12 @@ public final class SensorOverlays {
+      */
+     public void show(int sensorId, @BiometricRequestConstants.RequestReason int reason,
+             @NonNull AcquisitionClient<?> client) {
++        show(null, sensorId, reason, client);
++    }
++
++    public void show(IBiometricsFingerprint daemon,
++            int sensorId, @BiometricRequestConstants.RequestReason int reason,
++            @NonNull AcquisitionClient<?> client) {
+         if (!sidefpsControllerRefactor()) {
+             if (mSidefpsController.isPresent()) {
+                 try {
+@@ -100,6 +107,23 @@ public final class SensorOverlays {
+                         }
+                     };
+ 
++            if (daemon != null) {
++                android.hardware.biometrics.fingerprint.V2_3.IBiometricsFingerprint extension =
++                    android.hardware.biometrics.fingerprint.V2_3.IBiometricsFingerprint.castFrom(
++                    daemon);
++                if (extension != null) {
++                    try {
++                        extension.onShowUdfpsOverlay();
++                    } catch (RemoteException e) {
++                        Slog.v(TAG, "showUdfpsOverlay | RemoteException: ", e);
++                    }
++                } else {
++                    Slog.v(TAG, "onShowUdfpsOverlay | failed to cast the HIDL to V2_3");
++                }
++            } else {
++                 Slog.v(TAG, "onShowUdfpsOverlay | daemon null");
++            }
++
+             try {
+                 mUdfpsOverlayController.get().showUdfpsOverlay(
+                         client.getRequestId(), sensorId, reason, callback);
+@@ -115,6 +139,10 @@ public final class SensorOverlays {
+      * @param sensorId sensor id
+      */
+     public void hide(int sensorId) {
++        hide(null, sensorId);
++    }
++        
++    public void hide(IBiometricsFingerprint daemon, int sensorId) {
+         if (!sidefpsControllerRefactor()) {
+             if (mSidefpsController.isPresent()) {
+                 try {
+@@ -126,6 +154,23 @@ public final class SensorOverlays {
+         }
+ 
+         if (mUdfpsOverlayController.isPresent()) {
++            if (daemon != null) {
++                android.hardware.biometrics.fingerprint.V2_3.IBiometricsFingerprint extension =
++                    android.hardware.biometrics.fingerprint.V2_3.IBiometricsFingerprint.castFrom(
++                    daemon);
++                if (extension != null) {
++                    try {
++                        extension.onHideUdfpsOverlay();
++                    } catch (RemoteException e) {
++                        Slog.v(TAG, "hideUdfpsOverlay | RemoteException: ", e);
++                    }
++                } else {
++                    Slog.v(TAG, "onHideUdfpsOverlay | failed to cast the HIDL to V2_3");
++                }
++            } else {
++                Slog.v(TAG, "onHideUdfpsOverlay | daemon null");
++            }
++
+             try {
+                 mUdfpsOverlayController.get().hideUdfpsOverlay(sensorId);
+             } catch (RemoteException e) {
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
+index b6311afb5ea1..97760aa64c84 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
+@@ -141,7 +141,7 @@ class FingerprintAuthenticationClient
+         if (authenticated) {
+             mState = STATE_STOPPED;
+             resetFailedAttempts(getTargetUserId());
+-            mSensorOverlays.hide(getSensorId());
++            mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+             if (sidefpsControllerRefactor()) {
+                 mAuthenticationStateListeners.onAuthenticationStopped();
+             }
+@@ -161,7 +161,7 @@ class FingerprintAuthenticationClient
+                 // Send the error, but do not invoke the FinishCallback yet. Since lockout is not
+                 // controlled by the HAL, the framework must stop the sensor before finishing the
+                 // client.
+-                mSensorOverlays.hide(getSensorId());
++                mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+                 if (sidefpsControllerRefactor()) {
+                     mAuthenticationStateListeners.onAuthenticationStopped();
+                 }
+@@ -183,7 +183,7 @@ class FingerprintAuthenticationClient
+             BiometricNotificationUtils.showBadCalibrationNotification(getContext());
+         }
+ 
+-        mSensorOverlays.hide(getSensorId());
++        mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStopped();
+         }
+@@ -238,7 +238,7 @@ class FingerprintAuthenticationClient
+ 
+     @Override
+     protected void startHalOperation() {
+-        mSensorOverlays.show(getSensorId(), getRequestReason(), this);
++        mSensorOverlays.show(getFreshDaemon(), getSensorId(), getRequestReason(), this);
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStarted(getRequestReason());
+         }
+@@ -250,7 +250,7 @@ class FingerprintAuthenticationClient
+             Slog.e(TAG, "Remote exception when requesting auth", e);
+             onError(BiometricFingerprintConstants.FINGERPRINT_ERROR_HW_UNAVAILABLE,
+                     0 /* vendorCode */);
+-            mSensorOverlays.hide(getSensorId());
++            mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+             if (sidefpsControllerRefactor()) {
+                 mAuthenticationStateListeners.onAuthenticationStopped();
+             }
+@@ -260,7 +260,7 @@ class FingerprintAuthenticationClient
+ 
+     @Override
+     protected void stopHalOperation() {
+-        mSensorOverlays.hide(getSensorId());
++        mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStopped();
+         }
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintDetectClient.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintDetectClient.java
+index 50e48fe91c56..6b80311f6ab2 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintDetectClient.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintDetectClient.java
+@@ -84,7 +84,7 @@ class FingerprintDetectClient extends AcquisitionClient<IBiometricsFingerprint>
+ 
+     @Override
+     protected void stopHalOperation() {
+-        mSensorOverlays.hide(getSensorId());
++        mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+ 
+         try {
+             getFreshDaemon().cancel();
+@@ -104,7 +104,7 @@ class FingerprintDetectClient extends AcquisitionClient<IBiometricsFingerprint>
+ 
+     @Override
+     protected void startHalOperation() {
+-        mSensorOverlays.show(getSensorId(), BiometricRequestConstants.REASON_AUTH_KEYGUARD,
++        mSensorOverlays.show(getFreshDaemon(), getSensorId(), BiometricRequestConstants.REASON_AUTH_KEYGUARD,
+                 this);
+ 
+         try {
+@@ -113,7 +113,7 @@ class FingerprintDetectClient extends AcquisitionClient<IBiometricsFingerprint>
+             Slog.e(TAG, "Remote exception when requesting auth", e);
+             onError(BiometricFingerprintConstants.FINGERPRINT_ERROR_HW_UNAVAILABLE,
+                     0 /* vendorCode */);
+-            mSensorOverlays.hide(getSensorId());
++            mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+             mCallback.onClientFinished(this, false /* success */);
+         }
+     }
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintEnrollClient.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintEnrollClient.java
+index 1cfb69bfd2b3..cb7db98aaa8e 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintEnrollClient.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintEnrollClient.java
+@@ -127,7 +127,7 @@ public class FingerprintEnrollClient extends EnrollClient<IBiometricsFingerprint
+ 
+     @Override
+     protected void startHalOperation() {
+-        mSensorOverlays.show(getSensorId(), getRequestReasonFromEnrollReason(mEnrollReason),
++        mSensorOverlays.show(getFreshDaemon(), getSensorId(), getRequestReasonFromEnrollReason(mEnrollReason),
+                 this);
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStarted(
+@@ -142,7 +142,7 @@ public class FingerprintEnrollClient extends EnrollClient<IBiometricsFingerprint
+             Slog.e(TAG, "Remote exception when requesting enroll", e);
+             onError(BiometricFingerprintConstants.FINGERPRINT_ERROR_HW_UNAVAILABLE,
+                     0 /* vendorCode */);
+-            mSensorOverlays.hide(getSensorId());
++            mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+             if (sidefpsControllerRefactor()) {
+                 mAuthenticationStateListeners.onAuthenticationStopped();
+             }
+@@ -152,7 +152,7 @@ public class FingerprintEnrollClient extends EnrollClient<IBiometricsFingerprint
+ 
+     @Override
+     protected void stopHalOperation() {
+-        mSensorOverlays.hide(getSensorId());
++        mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStopped();
+         }
+@@ -175,7 +175,7 @@ public class FingerprintEnrollClient extends EnrollClient<IBiometricsFingerprint
+                 controller -> controller.onEnrollmentProgress(getSensorId(), remaining));
+ 
+         if (remaining == 0) {
+-            mSensorOverlays.hide(getSensorId());
++            mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+             if (sidefpsControllerRefactor()) {
+                 mAuthenticationStateListeners.onAuthenticationStopped();
+             }
+@@ -199,7 +199,7 @@ public class FingerprintEnrollClient extends EnrollClient<IBiometricsFingerprint
+     public void onError(int errorCode, int vendorCode) {
+         super.onError(errorCode, vendorCode);
+ 
+-        mSensorOverlays.hide(getSensorId());
++        mSensorOverlays.hide(getFreshDaemon(), getSensorId());
+         if (sidefpsControllerRefactor()) {
+             mAuthenticationStateListeners.onAuthenticationStopped();
+         }
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/TestHal.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/TestHal.java
+index 986e92e244f0..713e2b726c04 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/TestHal.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/TestHal.java
+@@ -63,6 +63,12 @@ public class TestHal extends IBiometricsFingerprint.Stub {
+ 
+     }
+ 
++    @Override
++    public void onShowUdfpsOverlay() {}
++
++    @Override
++    public void onHideUdfpsOverlay() {}
++
+     @Override
+     public long setNotify(IBiometricsFingerprintClientCallback clientCallback) {
+         mCallback = clientCallback;
+@@ -138,4 +144,4 @@ public class TestHal extends IBiometricsFingerprint.Stub {
+         Slog.w(TAG, "Authenticate");
+         return 0;
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.45.2
+

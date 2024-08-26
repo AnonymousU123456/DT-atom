@@ -1,0 +1,67 @@
+dex_import {
+	name: "mediatek-carrier-config-manager",
+	owner: "xiaomi",
+	jars: ["mediatek-carrier-config-manager.jar"]
+}
+
+dex_import {
+	name: "mediatek-common",
+	owner: "xiaomi",
+	jars: ["mediatek-common.jar"]
+}
+
+dex_import {
+	name: "mediatek-framework",
+	owner: "xiaomi",
+	jars: ["mediatek-framework.jar"]
+}
+
+dex_import {
+	name: "mediatek-gwsdv2",
+	owner: "xiaomi",
+	jars: ["mediatek-gwsdv2.jar"]
+}
+
+dex_import {
+	name: "mediatek-ims-base",
+	owner: "xiaomi",
+	jars: ["mediatek-ims-base.jar"]
+}
+
+dex_import {
+	name: "mediatek-ims-common",
+	owner: "xiaomi",
+	jars: ["mediatek-ims-common.jar"]
+}
+
+dex_import {
+	name: "mediatek-ims-extension-plugin",
+	owner: "xiaomi",
+	jars: ["mediatek-ims-extension-plugin.jar"]
+}
+
+dex_import {
+	name: "mediatek-services",
+	owner: "xiaomi",
+	jars: ["mediatek-services.jar"]
+}
+
+dex_import {
+	name: "mediatek-telecom-common",
+	owner: "xiaomi",
+	jars: ["mediatek-telecom-common.jar"]
+}
+
+dex_import {
+	name: "mediatek-telephony-base",
+	owner: "xiaomi",
+	jars: ["mediatek-telephony-base.jar"]
+}
+
+dex_import {
+	name: "mediatek-telephony-common",
+	owner: "xiaomi",
+	jars: ["mediatek-telephony-common.jar"]
+}
+
+

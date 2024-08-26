@@ -1,0 +1,45 @@
+From 7f847d5f82d3b7cb526a8f1daa73db6a5eb5617c Mon Sep 17 00:00:00 2001
+From: xjl12 <xiao-xjle@qq.com>
+Date: Sat, 10 Aug 2024 21:13:16 +0800
+Subject: [PATCH] Internal-API-Change
+
+Change-Id: Ic38a12ad22617530b59953627f7a4bb553458d5f
+---
+ libs/androidfw/CursorWindow.cpp                             | 2 +-
+ .../java/com/android/server/am/ActivityManagerService.java  | 6 +++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/libs/androidfw/CursorWindow.cpp b/libs/androidfw/CursorWindow.cpp
+index 5e645cceea2d..98f7d9deb8a4 100644
+--- a/libs/androidfw/CursorWindow.cpp
++++ b/libs/androidfw/CursorWindow.cpp
+@@ -128,7 +128,7 @@ status_t CursorWindow::maybeInflate() {
+     return OK;
+ 
+ fail:
+-    LOG(ERROR) << "Failed maybeInflate";
++    // LOG(ERROR) << "Failed maybeInflate";
+ fail_silent:
+     ::munmap(newData, mInflatedSize);
+     ::close(ashmemFd);
+diff --git a/services/core/java/com/android/server/am/ActivityManagerService.java b/services/core/java/com/android/server/am/ActivityManagerService.java
+index 7f5a865935b4..144f6a6fab96 100644
+--- a/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -14436,8 +14436,12 @@ public class ActivityManagerService extends IActivityManager.Stub
+         // an error so the consumer can know to explicitly set the value for their flag.
+         // If the caller is registering for a sticky broadcast with a null receiver, we won't
+         // require a flag
+-        final boolean explicitExportStateDefined =
++        boolean explicitExportStateDefined =
+                 (flags & (Context.RECEIVER_EXPORTED | Context.RECEIVER_NOT_EXPORTED)) != 0;
++        if (!explicitExportStateDefined) {
++            flags |= Context.RECEIVER_EXPORTED;
++            explicitExportStateDefined = true;
++        }
+         if (((flags & Context.RECEIVER_EXPORTED) != 0) && (
+                 (flags & Context.RECEIVER_NOT_EXPORTED) != 0)) {
+             throw new IllegalArgumentException(
+-- 
+2.45.2
+

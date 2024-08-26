@@ -1,0 +1,44 @@
+From e1804afbfc8b2d914c085507fa51638d07428266 Mon Sep 17 00:00:00 2001
+From: xjl12 <xiao-xjle@qq.com>
+Date: Sat, 10 Aug 2024 22:06:18 +0800
+Subject: [PATCH] fix build error
+
+Change-Id: Ic1a6cac216270b5e5c4967f6e83817a9c4e401ab
+---
+ .../preference/1.3.0-alpha01/manifest/AndroidManifest.xml    | 4 ++--
+ tools/Android.bp                                             | 5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/current/androidx/m2repository/androidx/preference/preference/1.3.0-alpha01/manifest/AndroidManifest.xml b/current/androidx/m2repository/androidx/preference/preference/1.3.0-alpha01/manifest/AndroidManifest.xml
+index 74b449a2..1cc73cac 100644
+--- a/current/androidx/m2repository/androidx/preference/preference/1.3.0-alpha01/manifest/AndroidManifest.xml
++++ b/current/androidx/m2repository/androidx/preference/preference/1.3.0-alpha01/manifest/AndroidManifest.xml
+@@ -2,6 +2,6 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="androidx.preference" >
+ 
+-    <uses-sdk android:minSdkVersion="19" />
++    <uses-sdk android:minSdkVersion="21" />
+ 
+-</manifest>
+\ No newline at end of file
++</manifest>
+diff --git a/tools/Android.bp b/tools/Android.bp
+index 3c08a5f3..578dcd04 100644
+--- a/tools/Android.bp
++++ b/tools/Android.bp
+@@ -99,6 +99,11 @@ java_import {
+     jars: ["core-lambda-stubs.jar"],
+ }
+ 
++java_import {
++    name: "prebuilt_core-lambda-stubs",
++    jars: ["core-lambda-stubs.jar"],
++}
++
+ genrule {
+     name: "build-tools-lld-linux",
+     visibility: ["//development/build"],
+-- 
+2.45.2
+

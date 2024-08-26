@@ -1,0 +1,54 @@
+From 64fb11996f674fa63b7a3aa0cd9b367f74f931a2 Mon Sep 17 00:00:00 2001
+From: xjl12 <xiao-xjle@qq.com>
+Date: Sat, 10 Aug 2024 22:09:59 +0800
+Subject: [PATCH] Fix boot init fail and build NEVERALLOW sepolicy
+
+Change-Id: I0837bfff61f6f5005666fbc66361483c7008bf4e
+---
+ Android.bp             | 2 --
+ Android.mk             | 3 ---
+ private/genfs_contexts | 1 -
+ 3 files changed, 6 deletions(-)
+
+diff --git a/Android.bp b/Android.bp
+index 1d8e5dd46..879f8d0f5 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -645,8 +645,6 @@ se_policy_conf {
+         system_ext_private_policy +
+         product_public_policy +
+         product_private_policy + [
+-        ":se_build_files{.plat_vendor}",
+-        ":se_build_files{.vendor}",
+         ":se_build_files{.odm}",
+     ],
+     target_recovery: true,
+diff --git a/Android.mk b/Android.mk
+index 37acb756f..78ff9e117 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -68,9 +68,6 @@ HAS_PRODUCT_SEPOLICY_DIR := true
+ endif
+ 
+ ifeq ($(SELINUX_IGNORE_NEVERALLOWS),true)
+-ifeq ($(TARGET_BUILD_VARIANT),user)
+-$(error SELINUX_IGNORE_NEVERALLOWS := true cannot be used in user builds)
+-endif
+ $(warning Be careful when using the SELINUX_IGNORE_NEVERALLOWS flag. \
+           It does not work in user builds and using it will \
+           not stop you from failing CTS.)
+diff --git a/private/genfs_contexts b/private/genfs_contexts
+index e4baeeeda..0a36ca4ae 100644
+--- a/private/genfs_contexts
++++ b/private/genfs_contexts
+@@ -402,7 +402,6 @@ genfscon binder / u:object_r:binderfs:s0
+ genfscon exfat / u:object_r:exfat:s0
+ genfscon debugfs / u:object_r:debugfs:s0
+ genfscon fuse / u:object_r:fuse:s0
+-genfscon fuseblk / u:object_r:fuseblk:s0
+ genfscon configfs / u:object_r:configfs:s0
+ genfscon sdcardfs / u:object_r:sdcardfs:s0
+ genfscon esdfs / u:object_r:sdcardfs:s0
+-- 
+2.45.2
+

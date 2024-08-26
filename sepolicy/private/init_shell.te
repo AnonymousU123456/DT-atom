@@ -1,0 +1,12 @@
+type protect_f_data_file;
+allow init_shell cache_file:dir { getattr open read write add_name };
+allow init_shell cache_file:file { getattr open read write create };
+allow init_shell mnt_user_file:dir { getattr };
+allow init_shell metadata_file:dir { getattr };
+allow init_shell linkerconfig_file:dir { getattr };
+allow init_shell protect_f_data_file:dir { getattr };
+allow init_shell logcat_exec:file { getattr execute read open execute_no_trans map  };
+allow init_shell init_shell:capability { dac_read_search dac_override };
+allow init_shell default_prop:file { getattr open read write map };
+allow init_shell logdr_socket:sock_file { write };
+allow init_shell logd:unix_stream_socket { connectto };

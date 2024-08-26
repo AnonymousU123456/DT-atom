@@ -1,0 +1,11 @@
+android_app_import {
+	name: "Lawnchair",
+	owner: "LawnchairLauncher",
+	apk: "Lawnchair.Debug.14-dev.Nightly-CI_1196-8892d50.apk",
+	overrides: ["Trebuchet", "TrebuchetQuickstep"],
+	certificate: "testkey",
+	dex_preopt: {
+		enabled: false,
+	},
+	privileged: true,
+}

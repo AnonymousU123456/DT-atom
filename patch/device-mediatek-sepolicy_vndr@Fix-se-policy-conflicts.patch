@@ -1,0 +1,95 @@
+From c6daf102b09fdcffc27e5865d31988cf31489468 Mon Sep 17 00:00:00 2001
+From: xjl12 <1062256455@qq.com>
+Date: Sun, 12 Mar 2023 21:39:17 +0800
+Subject: [PATCH] Fix se policy conflicts
+
+Change-Id: Id89acfb5366c295904ed48c64195147c34877604
+---
+ basic/non_plat/file_contexts            |  3 ---
+ basic/non_plat/fpsgo_native.te          |  1 -
+ basic/non_plat/system_server.te         |  1 -
+ bsp/non_plat/file_contexts              |  1 -
+ bsp/non_plat/hal_fingerprint_default.te | 21 ---------------------
+ 5 files changed, 27 deletions(-)
+ delete mode 100644 bsp/non_plat/hal_fingerprint_default.te
+
+diff --git a/basic/non_plat/file_contexts b/basic/non_plat/file_contexts
+index 1dae34d..7ea5a52 100644
+--- a/basic/non_plat/file_contexts
++++ b/basic/non_plat/file_contexts
+@@ -700,9 +700,6 @@
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.gnss@2\.1-service-mediatek                u:object_r:mtk_hal_gnss_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.gnss-service\.mediatek                    u:object_r:mtk_hal_gnss_exec:s0
+ /(vendor|system/vendor)/bin/hw/vendor\.mediatek\.hardware\.mtkpower@1\.0-service            u:object_r:mtk_hal_power_exec:s0
+-/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@1\.0-service-mediatek             u:object_r:mtk_hal_sensors_exec:s0
+-/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@2\.0-service-mediatek             u:object_r:mtk_hal_sensors_exec:s0
+-/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@2\.0-service\.multihal-mediatek   u:object_r:mtk_hal_sensors_exec:s0
+ /(vendor|system/vendor)/bin/hw/rilproxy                                                     u:object_r:rild_exec:s0
+ /(vendor|system/vendor)/bin/hw/mtkfusionrild                                                u:object_r:rild_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.light@2\.0-service-mediatek               u:object_r:mtk_hal_light_exec:s0
+diff --git a/basic/non_plat/fpsgo_native.te b/basic/non_plat/fpsgo_native.te
+index f9e5b97..a70b421 100644
+--- a/basic/non_plat/fpsgo_native.te
++++ b/basic/non_plat/fpsgo_native.te
+@@ -27,7 +27,6 @@ allow fpsgo_native mediaserver:process setsched;
+ allow fpsgo_native mediaswcodec:process setsched;
+ allow fpsgo_native mediaextractor:process setsched;
+ allow fpsgo_native hal_audio_default:process setsched;
+-allow fpsgo_native mtk_hal_sensors:process setsched;
+ allow fpsgo_native mtk_hal_c2:process setsched;
+ allow fpsgo_native mtk_hal_gnss:process setsched;
+ allow fpsgo_native mtk_hal_power:process setsched;
+diff --git a/basic/non_plat/system_server.te b/basic/non_plat/system_server.te
+index c4b6995..acc3b1b 100644
+--- a/basic/non_plat/system_server.te
++++ b/basic/non_plat/system_server.te
+@@ -76,7 +76,6 @@ binder_call(system_server, mtk_hal_bluetooth)
+ # Date:W17.08
+ # Operation : sensors hal developing
+ # Purpose : sensors hal interface permission
+-binder_call(system_server, mtk_hal_sensors)
+ 
+ # Operation : light hal developing
+ # Purpose : light hal interface permission
+diff --git a/bsp/non_plat/file_contexts b/bsp/non_plat/file_contexts
+index 8cb09fa..c07c532 100644
+--- a/bsp/non_plat/file_contexts
++++ b/bsp/non_plat/file_contexts
+@@ -208,7 +208,6 @@
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.gatekeeper@1\.0-service\.itrusty u:object_r:hal_gatekeeper_default_exec:s0
+ /(vendor|system/vendor)/bin/bp_kmsetkey_ca u:object_r:bp_kmsetkey_ca_exec:s0
+ 
+-/(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerrpint@1\.1-service              u:object_r:hal_fingerprint_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks@1\.3-service-gpunn                 u:object_r:mtk_hal_neuralnetworks_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks@1\.3-service-mtk-neuron            u:object_r:mtk_hal_neuralnetworks_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks@1\.3-service-mtk-neuron-lazy       u:object_r:mtk_hal_neuralnetworks_exec:s0
+diff --git a/bsp/non_plat/hal_fingerprint_default.te b/bsp/non_plat/hal_fingerprint_default.te
+deleted file mode 100644
+index 49901f4..0000000
+--- a/bsp/non_plat/hal_fingerprint_default.te
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# ==============================================
+-# Common SEPolicy Rule
+-# ==============================================
+-
+-# MICROTRUST SEPolicy Rule
+-allow hal_fingerprint_default teei_fp_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default teei_client_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default teei_control_file:dir r_dir_perms;
+-allow hal_fingerprint_default teei_control_file:file rw_file_perms;
+-allow hal_fingerprint_default teei_control_file:lnk_file rw_file_perms;
+-allow hal_fingerprint_default uhid_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default tkcore_admin_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default fingerprint_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default self:netlink_socket create_socket_perms_no_ioctl;
+-allow hal_fingerprint_default self:unix_stream_socket connectto;
+-allow hal_fingerprint_default mobicore_user_device:chr_file rw_file_perms;
+-allow hal_fingerprint_default mobicore_user_device:unix_stream_socket connectto;
+-allow hal_fingerprint_default mobicore:unix_stream_socket connectto;
+-allow hal_fingerprint_default tmpfs:chr_file rw_file_perms;
+-allow hal_fingerprint_default debugfs_trace_marker:file rw_file_perms;
+-allow hal_fingerprint_default tee_device:chr_file rw_file_perms;
+-- 
+2.45.2
+

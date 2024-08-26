@@ -1,0 +1,26 @@
+From e3055f0ebcb5435e437022b54124d685236f185a Mon Sep 17 00:00:00 2001
+From: xjl12 <1062256455@qq.com>
+Date: Thu, 9 Mar 2023 09:48:27 +0800
+Subject: [PATCH] Build target add dsuimage
+
+Change-Id: If5673848b412110a5832ade663ce3d086f3c2be3
+---
+ core/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/core/Makefile b/core/Makefile
+index 701b9caeb..aa74324d3 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -739,6 +739,8 @@ DEFAULT_KEY_CERT_PAIR := $(strip $(DEFAULT_SYSTEM_DEV_CERTIFICATE))
+ .PHONY: systemimage
+ systemimage:
+ 
++.PHONY: dsuimage
++dsuimage: systemimage productimage
+ # -----------------------------------------------------------------
+ 
+ .PHONY: event-log-tags
+-- 
+2.39.2
+
