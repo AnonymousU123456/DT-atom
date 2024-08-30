@@ -27,6 +27,20 @@ system_ext/lib64/vendor.mediatek.hardware.videotelephony@1.0.so
 
 #vendor things
 
+
+#TEE
+vendor/bin/teei_daemon
+vendor/etc/init/microtrust.rc
+vendor/lib/libTEECommon.so
+vendor/lib/libimsg_log.so
+vendor/lib/libteeclientjni.so
+vendor/lib/libteeclientjni@1.1.so
+vendor/lib/libteei_daemon_vfs.so
+vendor/lib64/libTEECommon.so
+vendor/lib64/libimsg_log.so
+vendor/lib64/libteeclientjni.so
+vendor/lib64/libteeclientjni@1.1.so
+vendor/lib64/libteei_daemon_vfs.so
 vendor/thh/ta/020f0000000000000000000000000000.ta
 vendor/thh/ta/05120000000000000000000000000000.ta
 vendor/thh/ta/06090000000000000000000000000000.ta
