@@ -11,10 +11,10 @@
     "branch"      : "lineage-21",
     "target_path" : "hardware/xiaomi"
   },
- {
+  {
     "repository"  : "MiCode/Xiaomi_Kernel_OpenSource",
     "target_path" : "kernel/xiaomi/atom",
     "remote"      : "github",
     "branch"      : "pissarro-s-oss"
- }
+  }
 ]
